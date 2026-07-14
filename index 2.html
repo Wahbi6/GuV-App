@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="description" content="Gewinn & Verlust Rechner für dein Gewerbe">
+    <title>Gewinn & Verlust</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%234f46e5' width='192' height='192'/><text x='50%25' y='50%25' font-size='120' fill='white' text-anchor='middle' dy='.3em' font-weight='bold'>€</text></svg>">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 6px;
+            margin-bottom: 20px;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .card-green h2 { color: #16a34a; }
+        .card-red h2 { color: #dc2626; }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .input-group { margin-bottom: 12px; }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-green { background: #22c55e; color: white; }
+        .btn-green:hover { background: #16a34a; }
+        .btn-red { background: #ef4444; color: white; }
+        .btn-red:hover { background: #dc2626; }
+        .btn-blue { background: #4f46e5; color: white; }
+        .btn-blue:hover { background: #4338ca; }
+        .btn-gray { background: #e5e7eb; color: #374151; }
+        .btn-gray:hover { background: #d1d5db; }
+
+        .btn-small {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 500px) {
+            .toolbar, .input-row { grid-template-columns: 1fr; }
+        }
+
+        .list { margin-top: 10px; }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #e5e7eb;
+            gap: 8px;
+        }
+
+        .list-item-green { background: #f0fdf4; border-color: #bbf7d0; }
+        .list-item-red { background: #fef2f2; border-color: #fecaca; }
+
+        .list-item-content { flex: 1; min-width: 0; }
+        .list-item-grund { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+        .list-item-meta { font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+        .list-item-betrag { font-weight: bold; font-size: 16px; }
+        .list-item-green .list-item-betrag { color: #16a34a; }
+        .list-item-red .list-item-betrag { color: #dc2626; }
+
+        .list-item-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 6px;
+            border-radius: 6px;
+        }
+        .btn-icon:hover { background: rgba(0,0,0,0.05); }
+
+        .empty-message {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 20px;
+        }
+
+        .sum-box {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+
+        .sum-label { color: #6b7280; font-size: 13px; margin-bottom: 4px; }
+        .sum-value { font-size: 26px; font-weight: bold; }
+        .sum-green .sum-value { color: #16a34a; }
+        .sum-red .sum-value { color: #dc2626; }
+
+        .result {
+            padding: 28px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+
+        .result-positive { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+        .result-negative { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .result-neutral { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
+
+        .result-label { font-size: 13px; opacity: 0.9; margin-bottom: 6px; }
+        .result-value { font-size: 42px; font-weight: bold; margin-bottom: 6px; }
+        .result-message { font-size: 13px; opacity: 0.9; }
+
+        .mini-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .mini-stat {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .mini-stat-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+        .mini-stat-value { font-size: 20px; font-weight: bold; }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #1e40af;
+        }
+
+        .edit-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+        .edit-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .edit-actions button { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Gewinn & Verlust</h1>
+            <p class="subtitle">Dein Gewerbe-Überblick</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-page="uebersicht" onclick="switchTab('uebersicht')">Übersicht</button>
+            <button class="tab-btn" data-page="einnahmen" onclick="switchTab('einnahmen')">Einnahmen</button>
+            <button class="tab-btn" data-page="ausgaben" onclick="switchTab('ausgaben')">Ausgaben</button>
+        </div>
+
+        <div class="page active" id="page-uebersicht">
+            <div class="result result-neutral" id="result">
+                <div class="result-label">Gewinn / Verlust</div>
+                <div class="result-value" id="gewinnVerlust">0,00 €</div>
+                <div class="result-message" id="resultMessage">➖ Einnahmen = Ausgaben</div>
+            </div>
+
+            <div class="mini-stats">
+                <div class="mini-stat">
+                    <div class="mini-stat-label">Gesamt Einnahmen</div>
+                    <div class="mini-stat-value" style="color:#16a34a" id="statEinnahmen">0,00 €</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-label">Gesamt Ausgaben</div>
+                    <div class="mini-stat-value" style="color:#dc2626" id="statAusgaben">0,00 €</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>💡 Tipp:</strong> Alle Daten werden lokal auf deinem Gerät gespeichert. Für die Steuererklärung brauchst du später zusätzlich eine Lösung wie SevDesk oder Lexoffice.
+            </div>
+        </div>
+
+        <div class="page" id="page-einnahmen">
+            <div class="card card-green">
+                <h2>💵 Neue Einnahme</h2>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Betrag (€)</label>
+                        <input type="number" step="0.01" id="betragEinnahmen" placeholder="z.B. 1000">
+                    </div>
+                    <div class="input-group">
+                        <label>Datum</label>
+                        <input type="date" id="datumEinnahmen">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Grund / Beschreibung</label>
+                    <input type="text" id="grundEinnahmen" placeholder="z.B. Webseite verkauft">
+                </div>
+                <button class="btn btn-green" onclick="addEinnahme()">+ Einnahme hinzufügen</button>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <div class="input-group" style="margin-bottom:0">
+                        <label>🔍 Suchen</label>
+                        <input type="text" id="searchEinnahmen" placeholder="Nach Grund suchen..." oninput="render()">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0">
+                        <label>Sortieren</label>
+                        <select id="sortEinnahmen" onchange="render()">
+                            <option value="datum-neu">Datum: neu → alt</option>
+                            <option value="datum-alt">Datum: alt → neu</option>
+                            <option value="betrag-hoch">Betrag: hoch → niedrig</option>
+                            <option value="betrag-niedrig">Betrag: niedrig → hoch</option>
+                            <option value="grund-az">Grund: A → Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="list" id="listEinnahmen"></div>
+                <div class="sum-box sum-green">
+                    <div class="sum-label">Gesamt Einnahmen</div>
+                    <div class="sum-value" id="summeEinnahmen">0,00 €</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-ausgaben">
+            <div class="card card-red">
+                <h2>📉 Neue Ausgabe</h2>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Betrag (€)</label>
+                        <input type="number" step="0.01" id="betragAusgaben" placeholder="z.B. 50">
+                    </div>
+                    <div class="input-group">
+                        <label>Datum</label>
+                        <input type="date" id="datumAusgaben">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Grund / Beschreibung</label>
+                    <input type="text" id="grundAusgaben" placeholder="z.B. Hosting, Domain, Software">
+                </div>
+                <button class="btn btn-red" onclick="addAusgabe()">+ Ausgabe hinzufügen</button>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <div class="input-group" style="margin-bottom:0">
+                        <label>🔍 Suchen</label>
+                        <input type="text" id="searchAusgaben" placeholder="Nach Grund suchen..." oninput="render()">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0">
+                        <label>Sortieren</label>
+                        <select id="sortAusgaben" onchange="render()">
+                            <option value="datum-neu">Datum: neu → alt</option>
+                            <option value="datum-alt">Datum: alt → neu</option>
+                            <option value="betrag-hoch">Betrag: hoch → niedrig</option>
+                            <option value="betrag-niedrig">Betrag: niedrig → hoch</option>
+                            <option value="grund-az">Grund: A → Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="list" id="listAusgaben"></div>
+                <div class="sum-box sum-red">
+                    <div class="sum-label">Gesamt Ausgaben</div>
+                    <div class="sum-value" id="summeAusgaben">0,00 €</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let einnahmen = [];
+        let ausgaben = [];
+        let editingId = null;
+
+        function today() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('guv-data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                einnahmen = data.einnahmen || [];
+                ausgaben = data.ausgaben || [];
+                einnahmen.forEach(e => { if (!e.datum) e.datum = today(); });
+                ausgaben.forEach(a => { if (!a.datum) a.datum = today(); });
+            }
+            document.getElementById('datumEinnahmen').value = today();
+            document.getElementById('datumAusgaben').value = today();
+            render();
+        }
+
+        function saveData() {
+            localStorage.setItem('guv-data', JSON.stringify({ einnahmen, ausgaben }));
+        }
+
+        function switchTab(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            document.querySelector(`.tab-btn[data-page="${page}"]`).classList.add('active');
+        }
+
+        function addEinnahme() {
+            const betrag = parseFloat(document.getElementById('betragEinnahmen').value);
+            const grund = document.getElementById('grundEinnahmen').value;
+            const datum = document.getElementById('datumEinnahmen').value || today();
+
+            if (betrag && grund && betrag > 0) {
+                einnahmen.push({ id: Date.now(), betrag, grund, datum });
+                document.getElementById('betragEinnahmen').value = '';
+                document.getElementById('grundEinnahmen').value = '';
+                document.getElementById('datumEinnahmen').value = today();
+                saveData();
+                render();
+            }
+        }
+
+        function addAusgabe() {
+            const betrag = parseFloat(document.getElementById('betragAusgaben').value);
+            const grund = document.getElementById('grundAusgaben').value;
+            const datum = document.getElementById('datumAusgaben').value || today();
+
+            if (betrag && grund && betrag > 0) {
+                ausgaben.push({ id: Date.now(), betrag, grund, datum });
+                document.getElementById('betragAusgaben').value = '';
+                document.getElementById('grundAusgaben').value = '';
+                document.getElementById('datumAusgaben').value = today();
+                saveData();
+                render();
+            }
+        }
+
+        function deleteEinnahme(id) {
+            einnahmen = einnahmen.filter(e => e.id !== id);
+            saveData();
+            render();
+        }
+
+        function deleteAusgabe(id) {
+            ausgaben = ausgaben.filter(a => a.id !== id);
+            saveData();
+            render();
+        }
+
+        function startEdit(type, id) {
+            editingId = { type, id };
+            render();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            render();
+        }
+
+        function saveEdit(type, id) {
+            const betrag = parseFloat(document.getElementById('edit-betrag-' + id).value);
+            const grund = document.getElementById('edit-grund-' + id).value;
+            const datum = document.getElementById('edit-datum-' + id).value;
+
+            if (!betrag || !grund || betrag <= 0) return;
+
+            const list = type === 'einnahme' ? einnahmen : ausgaben;
+            const item = list.find(x => x.id === id);
+            if (item) {
+                item.betrag = betrag;
+                item.grund = grund;
+                item.datum = datum;
+            }
+            editingId = null;
+            saveData();
+            render();
+        }
+
+        function filterAndSort(list, searchId, sortId) {
+            const search = document.getElementById(searchId).value.toLowerCase();
+            const sort = document.getElementById(sortId).value;
+
+            let result = list.filter(item => item.grund.toLowerCase().includes(search));
+
+            switch (sort) {
+                case 'datum-neu':
+                    result.sort((a, b) => new Date(b.datum) - new Date(a.datum));
+                    break;
+                case 'datum-alt':
+                    result.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+                    break;
+                case 'betrag-hoch':
+                    result.sort((a, b) => b.betrag - a.betrag);
+                    break;
+                case 'betrag-niedrig':
+                    result.sort((a, b) => a.betrag - b.betrag);
+                    break;
+                case 'grund-az':
+                    result.sort((a, b) => a.grund.localeCompare(b.grund));
+                    break;
+            }
+            return result;
+        }
+
+        function formatDatum(datum) {
+            if (!datum) return '';
+            const d = new Date(datum);
+            return d.toLocaleDateString('de-DE');
+        }
+
+        function renderList(list, containerId, type, colorClass) {
+            const container = document.getElementById(containerId);
+
+            if (list.length === 0) {
+                container.innerHTML = '<div class="empty-message">Keine Einträge gefunden</div>';
+                return;
+            }
+
+            container.innerHTML = list.map(item => {
+                const isEditing = editingId && editingId.type === type && editingId.id === item.id;
+
+                if (isEditing) {
+                    return `
+                        <div class="list-item ${colorClass}">
+                            <div class="list-item-content">
+                                <div class="edit-row">
+                                    <input type="number" step="0.01" id="edit-betrag-${item.id}" value="${item.betrag}">
+                                    <input type="date" id="edit-datum-${item.id}" value="${item.datum}">
+                                </div>
+                                <input type="text" id="edit-grund-${item.id}" value="${item.grund}" style="margin-top:8px">
+                                <div class="edit-actions">
+                                    <button class="btn btn-blue btn-small" onclick="saveEdit('${type}', ${item.id})">✓ Speichern</button>
+                                    <button class="btn btn-gray btn-small" onclick="cancelEdit()">✕ Abbrechen</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const deleteFn = type === 'einnahme' ? 'deleteEinnahme' : 'deleteAusgabe';
+                return `
+                    <div class="list-item ${colorClass}">
+                        <div class="list-item-content">
+                            <div class="list-item-grund">${item.grund}</div>
+                            <div class="list-item-meta">${formatDatum(item.datum)}</div>
+                            <div class="list-item-betrag">${item.betrag.toFixed(2)} €</div>
+                        </div>
+                        <div class="list-item-actions">
+                            <button class="btn-icon" onclick="startEdit('${type}', ${item.id})" title="Bearbeiten">✏️</button>
+                            <button class="btn-icon" onclick="${deleteFn}(${item.id})" title="Löschen">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function render() {
+            const gefilterteEinnahmen = filterAndSort(einnahmen, 'searchEinnahmen', 'sortEinnahmen');
+            const gefilterteAusgaben = filterAndSort(ausgaben, 'searchAusgaben', 'sortAusgaben');
+
+            renderList(gefilterteEinnahmen, 'listEinnahmen', 'einnahme', 'list-item-green');
+            renderList(gefilterteAusgaben, 'listAusgaben', 'ausgabe', 'list-item-red');
+
+            const summeEinnahmen = einnahmen.reduce((sum, e) => sum + e.betrag, 0);
+            const summeAusgaben = ausgaben.reduce((sum, a) => sum + a.betrag, 0);
+            const gewinnVerlust = summeEinnahmen - summeAusgaben;
+
+            document.getElementById('summeEinnahmen').textContent = summeEinnahmen.toFixed(2) + ' €';
+            document.getElementById('summeAusgaben').textContent = summeAusgaben.toFixed(2) + ' €';
+            document.getElementById('statEinnahmen').textContent = summeEinnahmen.toFixed(2) + ' €';
+            document.getElementById('statAusgaben').textContent = summeAusgaben.toFixed(2) + ' €';
+            document.getElementById('gewinnVerlust').textContent = (gewinnVerlust >= 0 ? '+' : '') + gewinnVerlust.toFixed(2) + ' €';
+
+            const resultBox = document.getElementById('result');
+            const resultMessage = document.getElementById('resultMessage');
+            resultBox.classList.remove('result-positive', 'result-negative', 'result-neutral');
+
+            if (gewinnVerlust > 0) {
+                resultBox.classList.add('result-positive');
+                resultMessage.textContent = '✨ Glückwunsch! Du machst Gewinn';
+            } else if (gewinnVerlust < 0) {
+                resultBox.classList.add('result-negative');
+                resultMessage.textContent = '⚠️ Du machst aktuell Verlust';
+            } else {
+                resultBox.classList.add('result-neutral');
+                resultMessage.textContent = '➖ Einnahmen = Ausgaben';
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
